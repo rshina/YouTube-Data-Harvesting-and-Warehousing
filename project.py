@@ -1,4 +1,4 @@
-#capstone project ** YouTube Data Harvesting and Warehousing**
+  #capstone project ** YouTube Data Harvesting and Warehousing**
 
 from pprint import pprint
 import pandas as pd
@@ -20,6 +20,7 @@ ch_id_list=["UCNhaliLwhGH9wX3pe9bFTbA",
 "UCteRPiisgIoHtMgqHegpWAQ",
 "UCInztSxqsC52TZPqmQiX9GA"]
   
+
       
 ##1st step...youtube data Harvesting
 
@@ -168,13 +169,27 @@ channel_1_information={"channel_information1":channel_informations,"playlist_inf
 
 #To  tranfer and store the data into mongodb  using pymongo module                    
 #connecting to MONGODB
-
+client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
+mydb = client["project"]
+mycoll=mydb["project_mongodb"]
 def to_mongodb(channel_1_informations):
-    client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
-    mydb = client["project"]
-    mycoll=mydb["project_mongodb"]
-    #mycoll.insert_one(channel_1_informations)
-    #return "data exported into mongodb"
+    def to_mongodb(channel_1_informations):
+        client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
+        mydb = client["project"]
+        mycoll=mydb["project_mongodb"]
+        channel_data=[]
+        for item in mycoll.find({},{"_id":0,"channel_information1":1}):
+                                                        channel_data.append(item['channel_information1'])  
+        channl_name=[]
+        for item__ in channel_data:
+                        channl_name.append((item__["channel_name"]))
+
+        new_chnnel_name=channel_1_information["channel_information1"]["channel_name"]
+        if new_chnnel_name not in channl_name:
+                mycoll.insert_one(channel_1_informations)
+                return "data exported into mongodb"
+        else:
+                return"Channel data already saved"
 channel_info=to_mongodb(channel_1_information)
 
 #now stored all the informations in a single collection(project_mongodb)of mongodb
@@ -233,6 +248,7 @@ def insert_value():
                                         cur.execute(insert,values)
                                         myconnection.commit()
                                     except:
+
                                         print("values inserted")
 
 #insert playlist records                                
@@ -259,14 +275,19 @@ def insert_value():
                                        except Exception as e:
                                                         print("values inserted",e)
 
-#insert vedio records 
+#insert vedio records
             vedio_data=[]
             for item in mycoll.find({},{"_id":0,"vedio_information1":1}):
-                            for i in range (len(item["vedio_information1"])):
-                                             vedio_data.append(item["vedio_information1"][i])
+                            for i in item["vedio_information1"][0]:
+                                          vedio_data.append(i)
                         
 #convert mongodb records into dataframe                         
             df_vedio=pd.DataFrame(vedio_data) 
+
+
+                        
+#convert mongodb records into dataframe                         
+
 
             for index,row in df_vedio.iterrows():
                                     insert2='''insert into vedio(Video_Id,Video_Name,Video_Description,
@@ -310,13 +331,12 @@ def insert_value():
 
 
             for index,row in df_comment.iterrows():
-                                insert3='''insert into comment(Comment_Id,Comment_Text,Comment_Author,Comment_PublishedAt,Video_Id)  
-                                                            values(%s,%s,%s,%s,%s)'''
+                                insert3='''insert into comment(Comment_Id,Comment_Text,Comment_Author,Comment_PublishedAt)  
+                                                            values(%s,%s,%s,%s)'''
                                 values3=(row['Comment_Id'],
                                         row['Comment_Text'],
                                         row['Comment_Author'],
-                                        row['Comment_PublishedAt'],
-                                        row['Video_Id'])
+                                        row['Comment_PublishedAt'])
 
 
 
@@ -327,7 +347,7 @@ def insert_value():
                                       print("values inserted",e)
 
             return "records uplaoded"
-#insert_values_tables=insert_value()
+insert_values_tables=insert_value()
 #Now Tables(CHANNEL,PLAYLIST,VEDIO,COMMENT) Created in sql
 
 
@@ -340,12 +360,12 @@ def insert_value():
 #for front view of streamlit
 
 st.header(":blue[YOUTUBE DATA HARVESTING AND WAREHOUSING]",divider='rainbow')
-st.sidebar.caption("*Extract Data Using Google API")
-st.sidebar.caption("*Store the Data into MONGODB") 
-st.sidebar.caption("*Migrate tha Data to a SQL data warehouse")
-st.sidebar.caption("*Data Management Using MongoDB,Pandas and SQL")
-st.sidebar.caption("*Streamlit Display")
-st.sidebar.caption("Used Tools::**Python**,**YouTube Data API** , **MONGODB** ,**MySQL**,**VSCode**,**Streamlit**")
+st.sidebar.caption(":red[*Extract Data Using Google API]")
+st.sidebar.caption(":red[*Store the Data into MONGODB]") 
+st.sidebar.caption(":red[*Migrate tha Data to a SQL data warehouse]")
+st.sidebar.caption(":red[*Data Management Using MongoDB,Pandas and SQL]")
+st.sidebar.caption(":red[*Streamlit Display]")
+st.sidebar.caption(":red[Used Tools::**Python**,**YouTube Data API** , **MONGODB** ,**MySQL**,**VSCode**,**Streamlit**]")
 
         
  #1)
@@ -390,50 +410,19 @@ if collect_store:
 
 
 
-
-#To Migrate to sql          
-if st.button("MIgrate Data to SQL and Create table"):
-        tables_sql()
-        if  input_channel_id not in ch_id_list:
-                                  insert_value()
-                                  st.success("Data Migration to sql is  Done")
-
- #Choose any channel and get information of spcific channel                                 
-channel_names_list=[
-"LifeofShazzam",	
-"JASON MAKKI",
-"Finally",
-"MaanavaN Learn Code",
-"Learn at Knowstar",
-"Shaan Geo",
-"IBM Technology",
-"James Ernest", 
-"A2D Bytes",
-"TravelTriangle " ]   
-
-user_input_ch_name = st.selectbox("Select channel",channel_names_list)
-if user_input_ch_name :
-        def channel_selct(user_input_ch_name1):
-                   client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
-                   mydb = client["project"]
-                   mycoll=mydb["project_mongodb"]
-                   channel__data=[]
-                   for item in mycoll.find({},{"_id":0,"channel_information1":1}):
-                                           if item['channel_information1']['channel_name']==user_input_ch_name1:
-                                                                                 channel__data.append(item['channel_information1'])
-                   return channel__data 
-        result=channel_selct(user_input_ch_name)        
-
-df1_channel1=st.dataframe(result)
+   
+#To Migrate to sql  
+collect_store_sql=st.button("Migrate to Sql database")
+if collect_store_sql:
+        insert_value()
+        st.success("succesfully migrated to database")
 
 
-                               
+
             
-                        
-             
 #Query/Answer section
 import seaborn as sns
-import plotly_express as px
+#import plotly_express as px
 Query_Answer=st.selectbox("Select a Query",["1* What are the names of all vedios and their corresponding channels ?","2* Which channels have the most number of vedios,and how many vedios do thay have ?","3* What are the top 10 most viewed videos and their respective channels?",'4* How many comments were made on each video, and what are their corresponding video names ?',
                                          "5* Which videos have the highest number of likes, what are their corresponding channel names?","6* What is the total number of likes for each video, and what are their corresponding video names?","7* What is the total number of views for each channel, and what are their corresponding channel names?","8* What are the names of all the channels that have published videos in the year2022?",
                                          "9* What is the average duration of all videos in each channel, and what are their corresponding channel names?","10* Which videos have the highest number of comments, and what are their corresponding channel names?"])
@@ -554,4 +543,11 @@ elif Query_Answer=="10* Which videos have the highest number of comments, and wh
 
 
 
-    
+                                  
+
+
+                               
+            
+                        
+             
+#Query/Answer section
