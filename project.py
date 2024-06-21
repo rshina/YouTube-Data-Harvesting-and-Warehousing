@@ -173,7 +173,6 @@ client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
 mydb = client["project"]
 mycoll=mydb["project_mongodb"]
 def to_mongodb(channel_1_informations):
-    def to_mongodb(channel_1_informations):
         client = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
         mydb = client["project"]
         mycoll=mydb["project_mongodb"]
